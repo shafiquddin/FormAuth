@@ -1,17 +1,18 @@
-import React, { useEffect, useReducer, useState } from "react";
+import React, { useContext, useEffect, useReducer, useState } from "react";
 
 import Card from "../UI/Card/Card";
 import classes from "./Login.module.css";
 import Button from "../UI/Button/Button";
+import AuthContext from "../../Store/auth-context";
 
 const emailReducer = (state, action) => {
   if (action.type === "USER_INPUT") {
     return { value: action.val, isValid: action.val.includes("@") };
   }
   if (action.type === "INPUT_BLUR") {
-    return { value: state.value, isValid: state.isValid };
+    return { value: state.value, isValid: state.value };
   }
-  return { value: "", isValid: null };
+  return { type: "", isValid: null };
 };
 
 const passwordReducer = (state, action) => {
@@ -19,33 +20,34 @@ const passwordReducer = (state, action) => {
     return { value: action.val, isValid: action.val.trim().length > 6 };
   }
   if (action.type === "INPUT_BLUR") {
-    return { value: state.value, isValid: state.isValid };
+    return { value: state.value, isValid: state.value };
   }
-  return { value: "", isValid: null };
+  return { type: "", isValid: null };
 };
 
 const Login = (props) => {
+  const ctx = useContext(AuthContext);
+  const [emailState, dispatchEmail] = useReducer(emailReducer, {
+    value: "",
+    isValid: null,
+  });
+  const [passwordState, dispatchPassword] = useReducer(passwordReducer, {
+    value: "",
+    isValid: null,
+  });
+
   const [formIsValid, setFormIsValid] = useState(false);
-  const [email, dispatchEmail] = useReducer(emailReducer, {
-    value: "",
-    isValid: null,
-  });
 
-  const [password, dispatchPassword] = useReducer(passwordReducer, {
-    value: "",
-    isValid: null,
-  });
-
-  const { isValid: emailIsValid } = email;
-  const { isValid: passwordIsValid } = password;
+  const { isValid: emailIsValid } = emailState;
+  const { isValid: passwordIsValid } = passwordState;
 
   useEffect(() => {
     const identifier = setTimeout(() => {
-      console.log("validating");
+      console.log("Validating");
       setFormIsValid(emailIsValid && passwordIsValid);
     }, 500);
     return () => {
-      console.log("cleaning");
+      console.log("Running");
       clearTimeout(identifier);
     };
   }, [emailIsValid, passwordIsValid]);
@@ -68,7 +70,7 @@ const Login = (props) => {
 
   const submitHandler = (event) => {
     event.preventDefault();
-    props.onLogin(email.value, password.value);
+    ctx.onLogin(emailState.value, passwordState.value);
   };
 
   return (
@@ -83,7 +85,7 @@ const Login = (props) => {
           <input
             type="email"
             id="email"
-            value={email.value}
+            value={emailState.value}
             onChange={emailChangeHandler}
             onBlur={validateEmailHandler}
           />
@@ -97,7 +99,7 @@ const Login = (props) => {
           <input
             type="password"
             id="password"
-            value={password.value}
+            value={passwordState.value}
             onChange={passwordChangeHandler}
             onBlur={validatePasswordHandler}
           />
